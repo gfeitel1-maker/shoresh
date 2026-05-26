@@ -479,6 +479,8 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                           if (!slot) return <td key={day.id} style={emptyTd} />
                           const act = slot.activity_id ? actMap.get(slot.activity_id) : null
                           const anchor = slot.anchor_id ? anchorMap.get(slot.anchor_id) : null
+                          const actIsLocked = slot.activity_id && act?.is_locked
+                          const isLocked = Boolean(actIsLocked && !slot.is_released)
                           return (
                             <SlotCell
                               key={day.id}
@@ -488,6 +490,10 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                               actColorIdx={act?.colorIdx || 0}
                               weatherMode={weatherMode}
                               onEdit={s => setEditSlot(s)}
+                              onLock={s => lockActivity(s.activity_id)}
+                              onRelease={s => releaseCell(s.id)}
+                              isLocked={isLocked}
+                              isDndEnabled={!isLocked}
                             />
                           )
                         })}
