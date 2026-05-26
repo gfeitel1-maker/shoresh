@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
-import * as XLSX from 'xlsx'
+﻿import React, { useState, useEffect, useRef } from 'react'
+import { readSheetRows, downloadXlsx } from '../utils/excel'
 import { supabase } from '../supabase'
 import { S } from '../styles/shared'
 
@@ -233,68 +233,65 @@ export default function ActivitiesScreen({ campId, onNavigate }) {
   }
 
   function downloadTemplate() {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['name','location','is_outdoor','max_groups_per_slot','min_per_week','max_per_week','same_tier_only','priority','eligible_tiers','prefer_before_day','prefer_before_day_min','weather_alternative','notes'],
-      ['Water Play','Pool Deck','TRUE',2,1,3,'FALSE','high','Yeladim,Tzofim','Friday',2,'',''],
-    ])
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Activities')
-    XLSX.writeFile(wb, 'activities_template.xlsx')
+    downloadXlsx([{
+      name: 'Activities',
+      rows: [
+        ['name','location','is_outdoor','max_groups_per_slot','min_per_week','max_per_week','same_tier_only','priority','eligible_tiers','prefer_before_day','prefer_before_day_min','weather_alternative','notes'],
+        ['Water Play','Pool Deck','TRUE',2,1,3,'FALSE','high','Yeladim,Tzofim','Friday',2,'',''],
+      ],
+    }], 'activities_template.xlsx')
   }
 
-  function onFileChange(e) {
+  async function onFileChange(e) {
     const file = e.target.files[0]; if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const wb = XLSX.read(ev.target.result, { type: 'array' })
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' })
-      const tierMap = Object.fromEntries(tiers.map(t => [t.name.toLowerCase(), t.id]))
-      const actMap = Object.fromEntries(activities.map(a => [a.name.toLowerCase(), a.id]))
-      const dowMap = Object.fromEntries(DOW.map((d, i) => [d.toLowerCase(), i]))
+    e.target.value = ''
+    const buffer = await file.arrayBuffer()
+    const rows = await readSheetRows(buffer)
+    const tierMap = Object.fromEntries(tiers.map(t => [t.name.toLowerCase(), t.id]))
+    const actMap = Object.fromEntries(activities.map(a => [a.name.toLowerCase(), a.id]))
+    const dowMap = Object.fromEntries(DOW.map((d, i) => [d.toLowerCase(), i]))
 
-      const parsed = rows.map(r => {
-        const name = String(r.name || '').trim()
-        let warning = null
-        if (!name) warning = 'Missing name'
+    const parsed = rows.map(r => {
+      const name = String(r.name || '').trim()
+      let warning = null
+      if (!name) warning = 'Missing name'
 
-        const eligTierRaw = String(r.eligible_tiers || '').trim().toLowerCase()
-        const eligTierNames = eligTierRaw === 'all' || eligTierRaw === ''
-          ? []
-          : eligTierRaw.split(',').map(s => s.trim()).filter(Boolean)
-        const eligible_tier_ids = eligTierNames.map(n => tierMap[n]).filter(Boolean)
-        if (eligTierNames.length && eligible_tier_ids.length < eligTierNames.length) {
-          const missing = eligTierNames.filter(n => !tierMap[n])
-          warning = warning || `Tier(s) not found: ${missing.join(', ')}`
-        }
+      const eligTierRaw = String(r.eligible_tiers || '').trim().toLowerCase()
+      const eligTierNames = eligTierRaw === 'all' || eligTierRaw === ''
+        ? []
+        : eligTierRaw.split(',').map(s => s.trim()).filter(Boolean)
+      const eligible_tier_ids = eligTierNames.map(n => tierMap[n]).filter(Boolean)
+      if (eligTierNames.length && eligible_tier_ids.length < eligTierNames.length) {
+        const missing = eligTierNames.filter(n => !tierMap[n])
+        warning = warning || `Tier(s) not found: ${missing.join(', ')}`
+      }
 
-        const weatherName = String(r.weather_alternative || '').trim()
-        const weather_alternative_id = weatherName ? actMap[weatherName.toLowerCase()] || null : null
-        if (weatherName && !weather_alternative_id) warning = warning || `Weather alt "${weatherName}" not found`
+      const weatherName = String(r.weather_alternative || '').trim()
+      const weather_alternative_id = weatherName ? actMap[weatherName.toLowerCase()] || null : null
+      if (weatherName && !weather_alternative_id) warning = warning || `Weather alt "${weatherName}" not found`
 
-        const preferDayStr = String(r.prefer_before_day || '').trim()
-        const prefer_before_day = preferDayStr ? (dowMap[preferDayStr.toLowerCase()] ?? null) : null
+      const preferDayStr = String(r.prefer_before_day || '').trim()
+      const prefer_before_day = preferDayStr ? (dowMap[preferDayStr.toLowerCase()] ?? null) : null
 
-        return {
-          name,
-          location: String(r.location || '').trim() || null,
-          is_outdoor: String(r.is_outdoor || '').toUpperCase() === 'TRUE',
-          max_groups_per_slot: Number(r.max_groups_per_slot) || 1,
-          min_per_week: Number(r.min_per_week) || 0,
-          max_per_week: Number(r.max_per_week) || 5,
-          same_tier_only: String(r.same_tier_only || '').toUpperCase() === 'TRUE',
-          priority: ['high','low'].includes(String(r.priority).toLowerCase()) ? String(r.priority).toLowerCase() : 'low',
-          eligible_tier_ids,
-          eligible_group_ids: [],
-          prefer_before_day,
-          prefer_before_day_min: r.prefer_before_day_min !== '' ? Number(r.prefer_before_day_min) : null,
-          weather_alternative_id,
-          notes: String(r.notes || '').trim() || null,
-          warning,
-        }
-      })
-      setImportRows(parsed); setImportStep('preview')
-    }
-    reader.readAsArrayBuffer(file); e.target.value = ''
+      return {
+        name,
+        location: String(r.location || '').trim() || null,
+        is_outdoor: String(r.is_outdoor || '').toUpperCase() === 'TRUE',
+        max_groups_per_slot: Number(r.max_groups_per_slot) || 1,
+        min_per_week: Number(r.min_per_week) || 0,
+        max_per_week: Number(r.max_per_week) || 5,
+        same_tier_only: String(r.same_tier_only || '').toUpperCase() === 'TRUE',
+        priority: ['high','low'].includes(String(r.priority).toLowerCase()) ? String(r.priority).toLowerCase() : 'low',
+        eligible_tier_ids,
+        eligible_group_ids: [],
+        prefer_before_day,
+        prefer_before_day_min: r.prefer_before_day_min !== '' ? Number(r.prefer_before_day_min) : null,
+        weather_alternative_id,
+        notes: String(r.notes || '').trim() || null,
+        warning,
+      }
+    })
+    setImportRows(parsed); setImportStep('preview')
   }
 
   async function confirmImport() {
@@ -452,3 +449,4 @@ export default function ActivitiesScreen({ campId, onNavigate }) {
 const grid2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }
 const grid3 = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0 16px' }
 const checkLabel = { fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }
+

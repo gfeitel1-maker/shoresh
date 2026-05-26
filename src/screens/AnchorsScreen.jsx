@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import * as XLSX from 'xlsx'
+﻿import { useState, useEffect, useRef } from 'react'
+import { readSheetRows, downloadXlsx } from '../utils/excel'
 import { supabase } from '../supabase'
 import { S } from '../styles/shared'
 
@@ -218,14 +218,14 @@ export default function AnchorsScreen({ campId, onNavigate }) {
   }
 
   function downloadTemplate() {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['name', 'day_label', 'time_block_name', 'is_all_tiers', 'tier_names', 'notes'],
-      ['Mifkad', 'Monday,Tuesday,Wednesday,Thursday,Friday', 'Mifkad Block', 'TRUE', '', ''],
-      ['Swim', 'Monday,Wednesday,Friday', 'Afternoon Swim', 'FALSE', 'Yeladim,Tzofim', ''],
-    ])
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Anchors')
-    XLSX.writeFile(wb, 'anchors_template.xlsx')
+    downloadXlsx([{
+      name: 'Anchors',
+      rows: [
+        ['name', 'day_label', 'time_block_name', 'is_all_tiers', 'tier_names', 'notes'],
+        ['Mifkad', 'Monday,Tuesday,Wednesday,Thursday,Friday', 'Mifkad Block', 'TRUE', '', ''],
+        ['Swim', 'Monday,Wednesday,Friday', 'Afternoon Swim', 'FALSE', 'Yeladim,Tzofim', ''],
+      ],
+    }], 'anchors_template.xlsx')
   }
 
   async function onFileChange(e) {
@@ -249,8 +249,7 @@ export default function AnchorsScreen({ campId, onNavigate }) {
     )
 
     const buffer = await file.arrayBuffer()
-    const wb = XLSX.read(buffer, { type: 'array' })
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' })
+    const rows = await readSheetRows(buffer)
 
     // Expand each row into one record per day
     const parsed = []
@@ -462,4 +461,5 @@ export default function AnchorsScreen({ campId, onNavigate }) {
     </div>
   )
 }
+
 

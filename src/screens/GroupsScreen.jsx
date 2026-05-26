@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
-import * as XLSX from 'xlsx'
+﻿import React, { useState, useEffect, useRef } from 'react'
+import { readSheetRows, downloadXlsx } from '../utils/excel'
 import { supabase } from '../supabase'
 import { S } from '../styles/shared'
 
@@ -126,36 +126,27 @@ export default function GroupsScreen({ campId, onNavigate }) {
   }
 
   function downloadTemplate() {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['name', 'tier_name', 'availability'],
-      ['Yeladim 1', 'Yeladim', 'all'],
-    ])
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Groups')
-    XLSX.writeFile(wb, 'groups_template.xlsx')
+    downloadXlsx([{ name: 'Groups', rows: [['name', 'tier_name', 'availability'], ['Yeladim 1', 'Yeladim', 'all']] }], 'groups_template.xlsx')
   }
 
-  function onFileChange(e) {
+  async function onFileChange(e) {
     const file = e.target.files[0]; if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const wb = XLSX.read(ev.target.result, { type: 'array' })
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' })
-      const tierMap = Object.fromEntries(tiers.map(t => [t.name.toLowerCase(), t.id]))
-      const parsed = rows.map(r => {
-        const name = String(r.name || '').trim()
-        const tierName = String(r.tier_name || '').trim()
-        const avail = String(r.availability || 'all').trim().toLowerCase()
-        let warning = null
-        if (!name) warning = 'Missing name'
-        const tierId = tierName ? tierMap[tierName.toLowerCase()] : null
-        if (tierName && !tierId) warning = `Tier "${tierName}" not found`
-        const availability = ['all','morning','afternoon'].includes(avail) ? avail : 'all'
-        return { name, tierName, tierId: tierId || null, availability, warning }
-      })
-      setImportRows(parsed); setImportStep('preview')
-    }
-    reader.readAsArrayBuffer(file); e.target.value = ''
+    e.target.value = ''
+    const buffer = await file.arrayBuffer()
+    const rows = await readSheetRows(buffer)
+    const tierMap = Object.fromEntries(tiers.map(t => [t.name.toLowerCase(), t.id]))
+    const parsed = rows.map(r => {
+      const name = String(r.name || '').trim()
+      const tierName = String(r.tier_name || '').trim()
+      const avail = String(r.availability || 'all').trim().toLowerCase()
+      let warning = null
+      if (!name) warning = 'Missing name'
+      const tierId = tierName ? tierMap[tierName.toLowerCase()] : null
+      if (tierName && !tierId) warning = `Tier "${tierName}" not found`
+      const availability = ['all','morning','afternoon'].includes(avail) ? avail : 'all'
+      return { name, tierName, tierId: tierId || null, availability, warning }
+    })
+    setImportRows(parsed); setImportStep('preview')
   }
 
   async function confirmImport() {
@@ -335,4 +326,5 @@ export default function GroupsScreen({ campId, onNavigate }) {
     </div>
   )
 }
+
 

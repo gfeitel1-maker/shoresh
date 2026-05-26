@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import * as XLSX from 'xlsx'
+import { downloadXlsx } from '../utils/excel'
 import { supabase } from '../supabase'
 import buildSchedule from '../engine/buildSchedule'
 import { S } from '../styles/shared'
@@ -282,10 +282,11 @@ export default function ScheduleScreen({ campId, onNavigate }) {
     await generate()
   }
 
-  function exportToExcel() {
-    const wb = XLSX.utils.book_new()
+  async function exportToExcel() {
     const actLookup = new Map(activities.map(a => [a.id, a.name]))
     const anchorLookup = new Map(anchors.map(a => [a.id, a.name]))
+
+    const sheets = []
 
     // One sheet per day
     for (const day of days) {
@@ -301,10 +302,11 @@ export default function ScheduleScreen({ campId, onNavigate }) {
         }
         return row
       })
-      const ws = XLSX.utils.aoa_to_sheet([header, ...dataRows])
-      // Column widths
-      ws['!cols'] = [{ wch: 22 }, ...groups.map(() => ({ wch: 16 }))]
-      XLSX.utils.book_append_sheet(wb, ws, day.label)
+      sheets.push({
+        name: day.label,
+        rows: [header, ...dataRows],
+        colWidths: [22, ...groups.map(() => 16)],
+      })
     }
 
     // Master flat sheet
@@ -322,11 +324,13 @@ export default function ScheduleScreen({ campId, onNavigate }) {
         }
       }
     }
-    const masterWs = XLSX.utils.aoa_to_sheet([masterHeader, ...masterRows])
-    masterWs['!cols'] = [{ wch: 16 }, { wch: 12 }, { wch: 22 }, { wch: 20 }]
-    XLSX.utils.book_append_sheet(wb, masterWs, 'All Groups')
+    sheets.push({
+      name: 'All Groups',
+      rows: [masterHeader, ...masterRows],
+      colWidths: [16, 12, 22, 20],
+    })
 
-    XLSX.writeFile(wb, 'camp_schedule.xlsx')
+    await downloadXlsx(sheets, 'camp_schedule.xlsx')
   }
 
   // Slots scoped to the active context — group view filters to selected group, all other views show camp-wide
@@ -753,4 +757,5 @@ export default function ScheduleScreen({ campId, onNavigate }) {
     </div>
   )
 }
+
 

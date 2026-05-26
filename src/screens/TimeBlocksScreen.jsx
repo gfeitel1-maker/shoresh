@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import * as XLSX from 'xlsx'
+﻿import { useState, useEffect, useRef } from 'react'
+import { readSheetRows, downloadXlsx } from '../utils/excel'
 import { supabase } from '../supabase'
 import { S } from '../styles/shared'
 
@@ -126,36 +126,33 @@ export default function TimeBlocksScreen({ campId, onNavigate }) {
   }
 
   function downloadTemplate() {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['name', 'start_time', 'end_time', 'part_of_day', 'sort_order'],
-      ['Block 1', '09:45', '10:25', 'morning', 1],
-    ])
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Time Blocks')
-    XLSX.writeFile(wb, 'time_blocks_template.xlsx')
+    downloadXlsx([{
+      name: 'Time Blocks',
+      rows: [
+        ['name', 'start_time', 'end_time', 'part_of_day', 'sort_order'],
+        ['Block 1', '09:45', '10:25', 'morning', 1],
+      ],
+    }], 'time_blocks_template.xlsx')
   }
 
-  function onFileChange(e) {
+  async function onFileChange(e) {
     const file = e.target.files[0]; if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const wb = XLSX.read(ev.target.result, { type: 'array' })
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' })
-      const parsed = rows.map(r => {
-        const name = String(r.name || '').trim()
-        const start_time = String(r.start_time || '').trim()
-        const end_time = String(r.end_time || '').trim()
-        const pod = String(r.part_of_day || '').trim().toLowerCase()
-        const sort_order = r.sort_order !== '' ? Number(r.sort_order) : null
-        let warning = null
-        if (!name) warning = 'Missing name'
-        else if (!start_time || !end_time) warning = 'Missing time'
-        else if (!['morning','afternoon','evening'].includes(pod)) warning = 'part_of_day must be morning/afternoon/evening'
-        return { name, start_time, end_time, part_of_day: pod, sort_order, warning }
-      })
-      setImportRows(parsed); setImportStep('preview')
-    }
-    reader.readAsArrayBuffer(file); e.target.value = ''
+    e.target.value = ''
+    const buffer = await file.arrayBuffer()
+    const rows = await readSheetRows(buffer)
+    const parsed = rows.map(r => {
+      const name = String(r.name || '').trim()
+      const start_time = String(r.start_time || '').trim()
+      const end_time = String(r.end_time || '').trim()
+      const pod = String(r.part_of_day || '').trim().toLowerCase()
+      const sort_order = r.sort_order !== '' ? Number(r.sort_order) : null
+      let warning = null
+      if (!name) warning = 'Missing name'
+      else if (!start_time || !end_time) warning = 'Missing time'
+      else if (!['morning','afternoon','evening'].includes(pod)) warning = 'part_of_day must be morning/afternoon/evening'
+      return { name, start_time, end_time, part_of_day: pod, sort_order, warning }
+    })
+    setImportRows(parsed); setImportStep('preview')
   }
 
   async function confirmImport() {
@@ -284,4 +281,5 @@ export default function TimeBlocksScreen({ campId, onNavigate }) {
     </div>
   )
 }
+
 

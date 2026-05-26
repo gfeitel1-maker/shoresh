@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import * as XLSX from 'xlsx'
+﻿import { useState, useEffect, useRef } from 'react'
+import { readSheetRows, downloadXlsx } from '../utils/excel'
 import { supabase } from '../supabase'
 
 const DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
@@ -93,33 +93,24 @@ export default function DaysScreen({ campId, onNavigate }) {
   }
 
   function downloadTemplate() {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['label', 'day_of_week', 'sort_order'],
-      ['Monday', 1, 1],
-    ])
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Days')
-    XLSX.writeFile(wb, 'days_template.xlsx')
+    downloadXlsx([{ name: 'Days', rows: [['label', 'day_of_week', 'sort_order'], ['Monday', 1, 1]] }], 'days_template.xlsx')
   }
 
-  function onFileChange(e) {
+  async function onFileChange(e) {
     const file = e.target.files[0]; if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const wb = XLSX.read(ev.target.result, { type: 'array' })
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' })
-      const parsed = rows.map(r => {
-        const label = String(r.label || '').trim()
-        const dow = Number(r.day_of_week)
-        const sort = r.sort_order !== '' ? Number(r.sort_order) : null
-        let warning = null
-        if (!label) warning = 'Missing label'
-        else if (isNaN(dow) || dow < 0 || dow > 6) warning = 'day_of_week must be 0–6'
-        return { label, day_of_week: dow, sort_order: sort, warning }
-      })
-      setImportRows(parsed); setImportStep('preview')
-    }
-    reader.readAsArrayBuffer(file); e.target.value = ''
+    e.target.value = ''
+    const buffer = await file.arrayBuffer()
+    const rows = await readSheetRows(buffer)
+    const parsed = rows.map(r => {
+      const label = String(r.label || '').trim()
+      const dow = Number(r.day_of_week)
+      const sort = r.sort_order !== '' ? Number(r.sort_order) : null
+      let warning = null
+      if (!label) warning = 'Missing label'
+      else if (isNaN(dow) || dow < 0 || dow > 6) warning = 'day_of_week must be 0–6'
+      return { label, day_of_week: dow, sort_order: sort, warning }
+    })
+    setImportRows(parsed); setImportStep('preview')
   }
 
   async function confirmImport() {
@@ -241,3 +232,4 @@ const inputStyle = { padding: '8px 10px', border: '1px solid var(--border)', bor
 const btnPrimary = { padding: '7px 14px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 5, fontWeight: 600, fontSize: 13, cursor: 'pointer' }
 const btnSecondary = { padding: '7px 14px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 5, fontWeight: 500, fontSize: 13, cursor: 'pointer' }
 const btnDanger = { padding: '7px 14px', background: 'none', color: 'var(--warning)', border: '1px solid var(--warning)', borderRadius: 5, fontWeight: 500, fontSize: 13, cursor: 'pointer' }
+

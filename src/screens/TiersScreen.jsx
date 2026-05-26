@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import * as XLSX from 'xlsx'
+﻿import { useState, useEffect, useRef } from 'react'
+import { readSheetRows, downloadXlsx } from '../utils/excel'
 import { supabase } from '../supabase'
 import { S } from '../styles/shared'
 
@@ -135,33 +135,21 @@ export default function TiersScreen({ campId, onNavigate }) {
   }
 
   function downloadTemplate() {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['name', 'sort_order'],
-      ['Yeladim', 1],
-    ])
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Tiers')
-    XLSX.writeFile(wb, 'tiers_template.xlsx')
+    downloadXlsx([{ name: 'Tiers', rows: [['name', 'sort_order'], ['Yeladim', 1]] }], 'tiers_template.xlsx')
   }
 
-  function onFileChange(e) {
-    const file = e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const wb = XLSX.read(ev.target.result, { type: 'array' })
-      const ws = wb.Sheets[wb.SheetNames[0]]
-      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' })
-      const parsed = rows.map(r => ({
-        name: String(r.name || '').trim(),
-        sort_order: r.sort_order !== '' ? Number(r.sort_order) : null,
-        warning: !String(r.name || '').trim() ? 'Missing name' : null,
-      }))
-      setImportRows(parsed)
-      setImportStep('preview')
-    }
-    reader.readAsArrayBuffer(file)
+  async function onFileChange(e) {
+    const file = e.target.files[0]; if (!file) return
     e.target.value = ''
+    const buffer = await file.arrayBuffer()
+    const rows = await readSheetRows(buffer)
+    const parsed = rows.map(r => ({
+      name: String(r.name || '').trim(),
+      sort_order: r.sort_order !== '' ? Number(r.sort_order) : null,
+      warning: !String(r.name || '').trim() ? 'Missing name' : null,
+    }))
+    setImportRows(parsed)
+    setImportStep('preview')
   }
 
   async function confirmImport() {
@@ -326,3 +314,4 @@ export default function TiersScreen({ campId, onNavigate }) {
     </div>
   )
 }
+
