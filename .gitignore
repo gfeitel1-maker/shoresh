@@ -31,3 +31,4 @@ dist-ssr
 .worktrees/
 .agents/
 skills-lock.json
+supabase/.temp/
