@@ -36,7 +36,7 @@ export default function ScheduleScreen({ campId, onNavigate }) {
   const [templateError, setTemplateError] = useState(null)
   const [snapshots, setSnapshots] = useState([])
   const [showVersions, setShowVersions] = useState(false)
-  const [compact, setCompact] = useState(false)
+  const [zoom, setZoom] = useState(100)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
@@ -404,15 +404,15 @@ export default function ScheduleScreen({ campId, onNavigate }) {
               ⛅ Weather Mode {weatherMode ? 'ON' : 'OFF'}
             </button>
 
-            {/* Compact toggle */}
-            <button
-              onClick={() => setCompact(c => !c)}
-              style={{ padding: '6px 14px', border: `1px solid ${compact ? 'var(--primary)' : 'var(--border)'}`, borderRadius: 6, background: compact ? 'var(--primary)' : 'var(--surface)', color: compact ? '#fff' : 'var(--text)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}
-            >
-              Compact
-            </button>
-
             <div style={{ flex: 1 }} />
+
+            {/* Zoom control — mirrors Excel's bottom-right slider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button onClick={() => setZoom(z => Math.max(50, z - 10))} style={{ width: 22, height: 22, border: '1px solid var(--border)', borderRadius: 4, background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: 14, fontWeight: 700, padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>−</button>
+              <input type="range" min={50} max={120} step={10} value={zoom} onChange={e => setZoom(Number(e.target.value))} style={{ width: 72, accentColor: 'var(--primary)', cursor: 'pointer' }} />
+              <button onClick={() => setZoom(z => Math.min(120, z + 10))} style={{ width: 22, height: 22, border: '1px solid var(--border)', borderRadius: 4, background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: 14, fontWeight: 700, padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>+</button>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', minWidth: 34, textAlign: 'right' }}>{zoom}%</span>
+            </div>
 
             <VersionsDropdown
               snapshots={snapshots}
@@ -473,19 +473,19 @@ export default function ScheduleScreen({ campId, onNavigate }) {
 
           {selectedGroup && (
             <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 280px)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 500, width: '100%', background: 'var(--surface)' }}>
+                <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 500, width: '100%', background: 'var(--surface)', zoom: zoom / 100 }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
-                      <th style={{ ...S.th, ...(compact && { padding: '6px 10px' }), whiteSpace: 'nowrap', width: 140, position: 'sticky', top: 0, left: 0, background: 'var(--surface-elevated)', zIndex: 3 }}>Block</th>
-                      {days.map(d => <th key={d.id} style={{ ...S.th, ...(compact && { padding: '6px 10px' }), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: 'var(--surface-elevated)', zIndex: 2 }}>{d.label}</th>)}
+                      <th style={{ ...S.th, whiteSpace: 'nowrap', width: 140, position: 'sticky', top: 0, left: 0, background: 'var(--surface-elevated)', zIndex: 3 }}>Block</th>
+                      {days.map(d => <th key={d.id} style={{ ...S.th, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: 'var(--surface-elevated)', zIndex: 2 }}>{d.label}</th>)}
                     </tr>
                   </thead>
                   <tbody>
                     {timeBlocks.map(block => (
                       <tr key={block.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: compact ? '5px 10px' : '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 1, borderRight: '1px solid var(--border)' }}>
-                          <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: compact ? 12 : 14, color: 'var(--text)' }}>{block.name}</div>
-                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: compact ? 9 : 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 1, borderRight: '1px solid var(--border)' }}>
+                          <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{block.name}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                         </td>
                         {days.map(day => {
                           const slot = getSlot(selectedGroup, day.id, block.id)
@@ -504,7 +504,6 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                               weatherMode={weatherMode}
                               onEdit={s => setEditSlot(s)}
                               isLocked={isLocked}
-                              compact={compact}
                             />
                           )
                         })}
@@ -550,19 +549,19 @@ export default function ScheduleScreen({ campId, onNavigate }) {
               }}
             >
             <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 280px)', borderRadius: 12, border: '1px solid var(--border)' }}>
-              <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 140 + groups.length * 130, background: 'var(--surface)' }}>
+              <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 140 + groups.length * 130, background: 'var(--surface)', zoom: zoom / 100 }}>
                 <thead>
                   <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
-                    <th style={{ ...S.th, ...(compact && { padding: '6px 10px' }), whiteSpace: 'nowrap', width: 140, position: 'sticky', top: 0, left: 0, background: 'var(--surface-elevated)', zIndex: 3 }}>Block</th>
-                    {groups.map(g => <th key={g.id} style={{ ...S.th, ...(compact && { padding: '6px 10px' }), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: 'var(--surface-elevated)', zIndex: 2 }}>{g.name}</th>)}
+                    <th style={{ ...S.th, whiteSpace: 'nowrap', width: 140, position: 'sticky', top: 0, left: 0, background: 'var(--surface-elevated)', zIndex: 3 }}>Block</th>
+                    {groups.map(g => <th key={g.id} style={{ ...S.th, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: 'var(--surface-elevated)', zIndex: 2 }}>{g.name}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {timeBlocks.map(block => (
                     <tr key={block.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: compact ? '5px 10px' : '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 1, borderRight: '1px solid var(--border)' }}>
-                        <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: compact ? 12 : 14, color: 'var(--text)' }}>{block.name}</div>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: compact ? 9 : 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
+                      <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 1, borderRight: '1px solid var(--border)' }}>
+                        <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{block.name}</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                       </td>
                       {groups.map(group => {
                         const slot = getSlot(group.id, selectedDay, block.id)
@@ -586,7 +585,6 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                             onRelease={s => releaseCell(s.id)}
                             isLocked={isLocked}
                             isDndEnabled={!isLocked}
-                            compact={compact}
                           />
                         )
                       })}
@@ -661,19 +659,19 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                   </div>
 
                   <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 280px)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                    <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', background: 'var(--surface)' }}>
+                    <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', background: 'var(--surface)', zoom: zoom / 100 }}>
                       <thead>
                         <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
-                          <th style={{ ...S.th, ...(compact && { padding: '6px 10px' }), whiteSpace: 'nowrap', width: 140, position: 'sticky', top: 0, left: 0, background: 'var(--surface-elevated)', zIndex: 3 }}>Block</th>
-                          {days.map(d => <th key={d.id} style={{ ...S.th, ...(compact && { padding: '6px 10px' }), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: 'var(--surface-elevated)', zIndex: 2 }}>{d.label}</th>)}
+                          <th style={{ ...S.th, whiteSpace: 'nowrap', width: 140, position: 'sticky', top: 0, left: 0, background: 'var(--surface-elevated)', zIndex: 3 }}>Block</th>
+                          {days.map(d => <th key={d.id} style={{ ...S.th, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: 'var(--surface-elevated)', zIndex: 2 }}>{d.label}</th>)}
                         </tr>
                       </thead>
                       <tbody>
                         {timeBlocks.map(block => (
                           <tr key={block.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                            <td style={{ padding: compact ? '5px 10px' : '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 1, borderRight: '1px solid var(--border)' }}>
-                              <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: compact ? 12 : 14, color: 'var(--text)' }}>{block.name}</div>
-                              <div style={{ fontFamily: 'var(--font-mono)', fontSize: compact ? 9 : 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
+                            <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 1, borderRight: '1px solid var(--border)' }}>
+                              <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{block.name}</div>
+                              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                             </td>
                             {days.map(day => {
                               const assigned = slots.filter(s => s.activity_id === selectedActivity && s.day_id === day.id && s.time_block_id === block.id)
