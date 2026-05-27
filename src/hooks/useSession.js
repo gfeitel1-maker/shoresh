@@ -16,26 +16,30 @@ export async function resolveCampId(session) {
 export function useSession() {
   const [session, setSession] = useState(null)
   const [campId, setCampId] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // Start false so the login screen is visible immediately.
+  // Only goes true while we're actively resolving campId for a valid session.
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     let active = true
 
-    // Use onAuthStateChange only — it fires INITIAL_SESSION immediately on subscribe
-    // and handles TOKEN_REFRESHED / SIGNED_OUT automatically.
-    // Calling getSession() separately can hang when a token refresh is in-flight
-    // (happens ~hourly as JWTs expire), leaving the spinner stuck forever.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       if (!active) return
       setSession(s)
-      const cid = await resolveCampId(s)
-      if (!active) return
-      setCampId(cid)
-      setLoading(false)
+      if (s) {
+        // Valid session — look up the camp; show spinner during this window.
+        setLoading(true)
+        const cid = await resolveCampId(s)
+        if (!active) return
+        setCampId(cid)
+        setLoading(false)
+      } else {
+        // No session — clear camp and stay on (or go to) login, no spinner needed.
+        setCampId(null)
+      }
     })
 
-    // Safety net: if auth state hasn't resolved within 10 s (e.g. network down),
-    // unblock the spinner so the user isn't permanently stuck.
+    // Safety net: if camp lookup hangs (network down, etc.), unblock after 10 s.
     const failsafe = setTimeout(() => {
       if (active) setLoading(false)
     }, 10_000)
