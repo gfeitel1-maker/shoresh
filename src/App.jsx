@@ -42,22 +42,23 @@ async function seedDays(campId) {
 }
 
 export default function App() {
-  const { session, campId, loading } = useSession()
+  const { session, campId, resolving } = useSession()
   const [screen, setScreen] = useState('setup')
 
   useEffect(() => {
     if (campId) seedDays(campId)
   }, [campId])
 
-  // If authenticated but no camp found (e.g. lookup failed or token was stale),
-  // sign out silently so the user always lands on the login screen.
+  // If we have a session but no camp (lookup returned null), sign out silently.
+  // Guard on !resolving so we don't sign out while the DB call is still in-flight.
   useEffect(() => {
-    if (!loading && session && !campId) {
+    if (session && !campId && !resolving) {
       supabase.auth.signOut()
     }
-  }, [loading, session, campId])
+  }, [session, campId, resolving])
 
-  if (loading || (session && !campId)) {
+  // Show a bounded spinner only while actively resolving campId for a known session.
+  if (session && !campId && resolving) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg)', color: 'var(--text-secondary)', fontSize: 13 }}>
         Loading…
@@ -65,7 +66,7 @@ export default function App() {
     )
   }
 
-  if (!session) {
+  if (!session || !campId) {
     return <AuthScreen />
   }
 

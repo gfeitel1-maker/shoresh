@@ -494,10 +494,7 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                               actColorIdx={act?.colorIdx || 0}
                               weatherMode={weatherMode}
                               onEdit={s => setEditSlot(s)}
-                              onLock={s => lockActivity(s.activity_id)}
-                              onRelease={s => releaseCell(s.id)}
                               isLocked={isLocked}
-                              isDndEnabled={!isLocked}
                             />
                           )
                         })}

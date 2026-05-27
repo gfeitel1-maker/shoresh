@@ -79,20 +79,23 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
   function handleClick() {
     if (!activity) { onEdit(slot); return }
     if (isLocked) { onRelease?.(slot); return }
-    // Delay single-click so a double-click can cancel it before the edit modal opens
-    clearTimeout(clickTimer.current)
-    clickTimer.current = setTimeout(() => onEdit(slot), 250)
-  }
-
-  function handleDoubleClick() {
-    if (!activity || isLocked) return
-    clearTimeout(clickTimer.current)
-    onLock?.(slot)
+    if (onLock && clickTimer.current) {
+      // Second click within 300ms — treat as double-click to lock
+      clearTimeout(clickTimer.current)
+      clickTimer.current = null
+      onLock(slot)
+    } else {
+      clickTimer.current = setTimeout(() => {
+        clickTimer.current = null
+        onEdit(slot)
+      }, 300)
+    }
   }
 
   function handleContextMenu(e) {
     e.preventDefault()
     clearTimeout(clickTimer.current)
+    clickTimer.current = null
     onEdit(slot)
   }
 
@@ -144,7 +147,6 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
         cursor: canDrag ? (isDragging ? 'grabbing' : 'grab') : 'pointer',
       }}
       onClick={handleClick}
-      onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
       title={tooltipText}
       {...(canDrag ? { ...listeners, ...attributes } : {})}
