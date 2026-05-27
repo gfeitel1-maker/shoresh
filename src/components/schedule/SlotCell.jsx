@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 
 const ACTIVITY_COLORS = ['#00ADBB','#2F7DE1','#00AA59','#A63595','#F0585D','#7DC433']
@@ -21,6 +21,11 @@ export const emptyTd = { padding: '8px 6px', verticalAlign: 'top' }
 export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherMode, onEdit, onLock, onRelease, isLocked, isDndEnabled }) {
   const id = slot ? `${slot.groupId}|${slot.dayId}|${slot.blockId}` : 'empty'
   const canDrag = isDndEnabled && slot?.type === 'activity' && !isLocked
+
+  // Hold-to-lock: refs must be declared before any early returns (Rules of Hooks)
+  const holdTimer = useRef(null)
+  const holdFired = useRef(false)
+  const startPos = useRef(null)
 
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id,
@@ -73,15 +78,40 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
   const color = activity ? activityColor(actColorIdx) : null
   const isWeatherHighlight = weatherMode && isOutdoor
 
+  function startHold(e) {
+    if (!activity || slot.type !== 'activity' || isLocked) return
+    holdFired.current = false
+    startPos.current = { x: e.clientX, y: e.clientY }
+    holdTimer.current = setTimeout(() => {
+      holdFired.current = true
+      onLock?.(slot)
+    }, 600)
+  }
+
+  function cancelHold() {
+    clearTimeout(holdTimer.current)
+    holdTimer.current = null
+    startPos.current = null
+  }
+
+  function handlePointerMove(e) {
+    if (!startPos.current) return
+    const dx = e.clientX - startPos.current.x
+    const dy = e.clientY - startPos.current.y
+    if (dx * dx + dy * dy > 64) cancelHold() // cancel if moved >8px (same as DnD threshold)
+  }
+
   function handleClick() {
+    cancelHold()
+    if (holdFired.current) { holdFired.current = false; return }
     if (!activity) { onEdit(slot); return }
     if (isLocked) { onRelease?.(slot); return }
-    if (onLock) { onLock(slot); return }
     onEdit(slot)
   }
 
   function handleContextMenu(e) {
     e.preventDefault()
+    cancelHold()
     onEdit(slot)
   }
 
@@ -132,6 +162,10 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
         ...cellTd,
         cursor: canDrag ? (isDragging ? 'grabbing' : 'grab') : 'pointer',
       }}
+      onPointerDown={startHold}
+      onPointerUp={cancelHold}
+      onPointerLeave={cancelHold}
+      onPointerMove={handlePointerMove}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       title={tooltipText}
