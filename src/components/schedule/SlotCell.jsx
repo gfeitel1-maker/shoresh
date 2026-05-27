@@ -18,7 +18,7 @@ export function activityColor(idx) { return ACTIVITY_COLORS[idx % ACTIVITY_COLOR
 export const cellTd = { padding: '8px 6px', verticalAlign: 'top', cursor: 'pointer' }
 export const emptyTd = { padding: '8px 6px', verticalAlign: 'top' }
 
-export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherMode, onEdit, onLock, onRelease, isLocked, isDndEnabled }) {
+export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherMode, onEdit, onLock, onRelease, isLocked, isDndEnabled, compact }) {
   const id = slot ? `${slot.groupId}|${slot.dayId}|${slot.blockId}` : 'empty'
   const canDrag = isDndEnabled && slot?.type === 'activity' && !isLocked
 
@@ -38,17 +38,21 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
 
   const setRef = el => { setDragRef(el); setDropRef(el) }
 
+  const cellPad = compact ? '3px 4px' : '8px 6px'
+  const innerPad = compact ? '4px 8px' : '10px 12px'
+  const minH = compact ? 32 : 56
+
   if (!slot) return <td style={emptyTd} />
 
   if (slot.type === 'anchor') {
     return (
-      <td ref={setRef} style={cellTd} onClick={() => onEdit(slot)}>
+      <td ref={setRef} style={{ padding: cellPad, verticalAlign: 'top', cursor: 'pointer' }} onClick={() => onEdit(slot)}>
         <div style={{
           background: '#F3E8FA',
           border: '1.5px solid #A6359566',
           borderRadius: 8,
-          padding: '10px 12px',
-          minHeight: 56,
+          padding: innerPad,
+          minHeight: minH,
           display: 'flex',
           alignItems: 'center',
         }}>
@@ -62,8 +66,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
 
   if (slot.type === 'unavailable') {
     return (
-      <td ref={setRef} style={emptyTd}>
-        <div style={{ background: 'var(--bg)', border: '1.5px dashed #D8C8B8', borderRadius: 8, minHeight: 56, opacity: 0.5 }} />
+      <td ref={setRef} style={{ padding: cellPad, verticalAlign: 'top' }}>
+        <div style={{ background: 'var(--bg)', border: '1.5px dashed #D8C8B8', borderRadius: 8, minHeight: minH, opacity: 0.5 }} />
       </td>
     )
   }
@@ -103,8 +107,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
     background: '#FFFBF0',
     border: '2px solid #E8A020',
     borderRadius: 8,
-    padding: '10px 12px',
-    minHeight: 56,
+    padding: innerPad,
+    minHeight: minH,
     position: 'relative',
     overflow: 'hidden',
   }
@@ -114,8 +118,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
         background: `${color}1E`,
         border: isWeatherHighlight ? `2px solid #2F7DE1` : `1.5px solid ${color}55`,
         borderRadius: 8,
-        padding: '10px 12px',
-        minHeight: 56,
+        padding: innerPad,
+        minHeight: minH,
         opacity: isDragging ? 0.4 : 1,
         outline: isOver && isDndEnabled ? '2px solid var(--primary)' : 'none',
         outlineOffset: -2,
@@ -125,8 +129,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
         background: 'var(--bg)',
         border: '1.5px dashed #D8C8B8',
         borderRadius: 8,
-        padding: '10px 12px',
-        minHeight: 56,
+        padding: innerPad,
+        minHeight: minH,
         position: 'relative',
       }
 
@@ -143,7 +147,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
     <td
       ref={setRef}
       style={{
-        ...cellTd,
+        padding: cellPad,
+        verticalAlign: 'top',
         cursor: canDrag ? (isDragging ? 'grabbing' : 'grab') : 'pointer',
       }}
       onClick={handleClick}
@@ -162,16 +167,16 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
           }} />
         )}
         <div style={{
-          fontSize: 12,
+          fontSize: compact ? 11 : 12,
           fontWeight: activity ? 700 : 500,
           color: isLocked ? '#7A5100' : (activity ? color : '#B0A090'),
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}>
-          {activity?.name || <span style={{ fontSize: 11 }}>Unassigned</span>}
+          {activity?.name || <span style={{ fontSize: 10 }}>Unassigned</span>}
         </div>
-        {hasFlags && !isLocked && (
+        {hasFlags && !isLocked && !compact && (
           <div style={{ display: 'flex', gap: 2, marginTop: 4, flexWrap: 'wrap' }}>
             {activeFlags.map(f => (
               <span
