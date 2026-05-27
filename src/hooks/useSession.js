@@ -21,21 +21,30 @@ export function useSession() {
   useEffect(() => {
     let active = true
 
-    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
-      if (!active) return
-      setSession(s)
-      setCampId(await resolveCampId(s))
-      if (active) setLoading(false)
-    })
-
+    // Use onAuthStateChange only — it fires INITIAL_SESSION immediately on subscribe
+    // and handles TOKEN_REFRESHED / SIGNED_OUT automatically.
+    // Calling getSession() separately can hang when a token refresh is in-flight
+    // (happens ~hourly as JWTs expire), leaving the spinner stuck forever.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       if (!active) return
       setSession(s)
-      setCampId(await resolveCampId(s))
-      if (active) setLoading(false)
+      const cid = await resolveCampId(s)
+      if (!active) return
+      setCampId(cid)
+      setLoading(false)
     })
 
-    return () => { active = false; subscription.unsubscribe() }
+    // Safety net: if auth state hasn't resolved within 10 s (e.g. network down),
+    // unblock the spinner so the user isn't permanently stuck.
+    const failsafe = setTimeout(() => {
+      if (active) setLoading(false)
+    }, 10_000)
+
+    return () => {
+      active = false
+      clearTimeout(failsafe)
+      subscription.unsubscribe()
+    }
   }, [])
 
   return { session, campId, loading }
