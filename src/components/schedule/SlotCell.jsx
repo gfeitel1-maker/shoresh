@@ -22,10 +22,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
   const id = slot ? `${slot.groupId}|${slot.dayId}|${slot.blockId}` : 'empty'
   const canDrag = isDndEnabled && slot?.type === 'activity' && !isLocked
 
-  // Hold-to-lock: refs must be declared before any early returns (Rules of Hooks)
-  const holdTimer = useRef(null)
-  const holdFired = useRef(false)
-  const startPos = useRef(null)
+  // Double-click-to-lock: ref must be declared before any early returns (Rules of Hooks)
+  const clickTimer = useRef(null)
 
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id,
@@ -78,40 +76,23 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
   const color = activity ? activityColor(actColorIdx) : null
   const isWeatherHighlight = weatherMode && isOutdoor
 
-  function startHold(e) {
-    if (!activity || slot.type !== 'activity' || isLocked) return
-    holdFired.current = false
-    startPos.current = { x: e.clientX, y: e.clientY }
-    holdTimer.current = setTimeout(() => {
-      holdFired.current = true
-      onLock?.(slot)
-    }, 600)
-  }
-
-  function cancelHold() {
-    clearTimeout(holdTimer.current)
-    holdTimer.current = null
-    startPos.current = null
-  }
-
-  function handlePointerMove(e) {
-    if (!startPos.current) return
-    const dx = e.clientX - startPos.current.x
-    const dy = e.clientY - startPos.current.y
-    if (dx * dx + dy * dy > 64) cancelHold() // cancel if moved >8px (same as DnD threshold)
-  }
-
   function handleClick() {
-    cancelHold()
-    if (holdFired.current) { holdFired.current = false; return }
     if (!activity) { onEdit(slot); return }
     if (isLocked) { onRelease?.(slot); return }
-    onEdit(slot)
+    // Delay single-click so a double-click can cancel it before the edit modal opens
+    clearTimeout(clickTimer.current)
+    clickTimer.current = setTimeout(() => onEdit(slot), 250)
+  }
+
+  function handleDoubleClick() {
+    if (!activity || isLocked) return
+    clearTimeout(clickTimer.current)
+    onLock?.(slot)
   }
 
   function handleContextMenu(e) {
     e.preventDefault()
-    cancelHold()
+    clearTimeout(clickTimer.current)
     onEdit(slot)
   }
 
@@ -162,11 +143,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
         ...cellTd,
         cursor: canDrag ? (isDragging ? 'grabbing' : 'grab') : 'pointer',
       }}
-      onPointerDown={startHold}
-      onPointerUp={cancelHold}
-      onPointerLeave={cancelHold}
-      onPointerMove={handlePointerMove}
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
       title={tooltipText}
       {...(canDrag ? { ...listeners, ...attributes } : {})}
