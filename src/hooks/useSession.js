@@ -1,5 +1,5 @@
 // src/hooks/useSession.js
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabase'
 
 export async function resolveCampId(session) {
@@ -9,15 +9,18 @@ export async function resolveCampId(session) {
     .select('id')
     .eq('owner_user_id', session.user.id)
     .maybeSingle()
-  if (error) throw error  // caller retries on transient auth/network errors
+  if (error) { console.error('resolveCampId:', error); return null }
   return data?.id ?? null
 }
 
 export function useSession() {
   const [session, setSession] = useState(null)
   const [campId, setCampId] = useState(null)
-  // True only while resolveCampId is in-flight — guaranteed to clear when the async call settles.
   const [resolving, setResolving] = useState(false)
+  // Mirrors campId so the onAuthStateChange closure can read the current value.
+  // Prevents TOKEN_REFRESHED (tab focus, hourly JWT rotation) from re-querying
+  // the DB and potentially clearing campId while the user is mid-session.
+  const campIdRef = useRef(null)
 
   useEffect(() => {
     let active = true
@@ -26,27 +29,17 @@ export function useSession() {
       if (!active) return
       setSession(s)
       if (s) {
+        // Token refresh while already in the app — campId hasn't changed, skip re-query.
+        if (_event === 'TOKEN_REFRESHED' && campIdRef.current) return
         setResolving(true)
-        // Two attempts with a 6-second timeout each. The first attempt can fail with
-        // a JWT/auth error if the token is mid-refresh on page load; a 1.5 s wait
-        // lets Supabase finish the refresh before we try again.
-        let cid = null
-        for (let attempt = 0; attempt < 2; attempt++) {
-          try {
-            cid = await Promise.race([
-              resolveCampId(s),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000)),
-            ])
-            break
-          } catch {
-            if (attempt === 0) await new Promise(r => setTimeout(r, 1500))
-          }
-        }
+        const cid = await resolveCampId(s)
         if (!active) return
         setCampId(cid)
+        campIdRef.current = cid
         setResolving(false)
       } else {
         setCampId(null)
+        campIdRef.current = null
         setResolving(false)
       }
     })
