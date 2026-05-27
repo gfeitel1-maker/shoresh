@@ -463,8 +463,8 @@ export default function ScheduleScreen({ campId, onNavigate }) {
           </div>
 
           {selectedGroup && (
-            <div style={{ overflowX: 'auto', overflowY: 'clip' }}>
-                <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 500, width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'clip' }}>
+            <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 280px)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 500, width: '100%', background: 'var(--surface)' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
                       <th style={{ ...S.th, whiteSpace: 'nowrap', width: 140, position: 'sticky', top: 0, left: 0, background: 'var(--surface-elevated)', zIndex: 3 }}>Block</th>
@@ -539,8 +539,8 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                 )
               }}
             >
-            <div style={{ overflowX: 'auto', overflowY: 'clip' }}>
-              <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 140 + groups.length * 130, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'clip' }}>
+            <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 280px)', borderRadius: 12, border: '1px solid var(--border)' }}>
+              <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 140 + groups.length * 130, background: 'var(--surface)' }}>
                 <thead>
                   <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
                     <th style={{ ...S.th, whiteSpace: 'nowrap', width: 140, position: 'sticky', top: 0, left: 0, background: 'var(--surface-elevated)', zIndex: 3 }}>Block</th>
@@ -649,8 +649,8 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                     {act?.is_outdoor && <span style={{ fontSize: 11, color: '#2F7DE1', fontWeight: 600 }}>OUTDOOR</span>}
                   </div>
 
-                  <div style={{ overflowX: 'auto', overflowY: 'clip' }}>
-                    <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'clip' }}>
+                  <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 280px)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                    <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', background: 'var(--surface)' }}>
                       <thead>
                         <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
                           <th style={{ ...S.th, whiteSpace: 'nowrap', width: 140, position: 'sticky', top: 0, left: 0, background: 'var(--surface-elevated)', zIndex: 3 }}>Block</th>
