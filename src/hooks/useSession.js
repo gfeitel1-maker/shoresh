@@ -9,7 +9,7 @@ export async function resolveCampId(session) {
     .select('id')
     .eq('owner_user_id', session.user.id)
     .maybeSingle()
-  if (error) console.error('resolveCampId:', error)
+  if (error) throw error  // caller retries on transient auth/network errors
   return data?.id ?? null
 }
 
@@ -27,7 +27,21 @@ export function useSession() {
       setSession(s)
       if (s) {
         setResolving(true)
-        const cid = await resolveCampId(s)
+        // Two attempts with a 6-second timeout each. The first attempt can fail with
+        // a JWT/auth error if the token is mid-refresh on page load; a 1.5 s wait
+        // lets Supabase finish the refresh before we try again.
+        let cid = null
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            cid = await Promise.race([
+              resolveCampId(s),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000)),
+            ])
+            break
+          } catch {
+            if (attempt === 0) await new Promise(r => setTimeout(r, 1500))
+          }
+        }
         if (!active) return
         setCampId(cid)
         setResolving(false)
