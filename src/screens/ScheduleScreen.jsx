@@ -458,16 +458,16 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                 <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 500, width: '100%', background: 'var(--surface)', zoom: zoom / 100 }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
-                      <th style={{ ...S.th, padding: '6px 10px', whiteSpace: 'nowrap', width: 140 }}>Block</th>
-                      {days.map(d => <th key={d.id} style={{ ...S.th, padding: '6px 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</th>)}
+                      <th style={{ ...S.th, padding: '8px 12px', whiteSpace: 'nowrap', width: 150 }}>Block</th>
+                      {days.map(d => <th key={d.id} style={{ ...S.th, padding: '8px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</th>)}
                     </tr>
                   </thead>
                   <tbody>
                     {timeBlocks.map(block => (
                       <tr key={block.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
                           <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{block.name}</div>
-                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                         </td>
                         {days.map(day => {
                           const slot = getSlot(selectedGroup, day.id, block.id)
@@ -536,14 +536,14 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                   <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 140 + groups.length * 130, background: 'var(--surface)', zoom: zoom / 100 }}>
                     <thead>
                       <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
-                        <th style={{ ...S.th, padding: '6px 10px', whiteSpace: 'nowrap', width: 140 }}>Block</th>
-                        {groups.map(g => <th key={g.id} style={{ ...S.th, padding: '6px 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.name}</th>)}
+                        <th style={{ ...S.th, padding: '8px 12px', whiteSpace: 'nowrap', width: 150 }}>Block</th>
+                        {groups.map(g => <th key={g.id} style={{ ...S.th, padding: '8px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.name}</th>)}
                       </tr>
                     </thead>
                     <tbody>
                       {timeBlocks.map(block => (
                         <tr key={block.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
+                          <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
                             <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{block.name}</div>
                             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                           </td>
@@ -644,14 +644,14 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                       <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', background: 'var(--surface)', zoom: zoom / 100 }}>
                         <thead>
                           <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
-                            <th style={{ ...S.th, padding: '6px 10px', whiteSpace: 'nowrap', width: 140 }}>Block</th>
-                            {days.map(d => <th key={d.id} style={{ ...S.th, padding: '6px 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</th>)}
+                            <th style={{ ...S.th, padding: '8px 12px', whiteSpace: 'nowrap', width: 150 }}>Block</th>
+                            {days.map(d => <th key={d.id} style={{ ...S.th, padding: '8px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</th>)}
                           </tr>
                         </thead>
                         <tbody>
                           {timeBlocks.map(block => (
                             <tr key={block.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                              <td style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
+                              <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
                                 <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{block.name}</div>
                                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                               </td>

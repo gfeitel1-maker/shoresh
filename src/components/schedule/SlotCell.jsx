@@ -15,8 +15,8 @@ const REAL_FLAG_NAMES = new Set(Object.keys(FLAG_COLORS))
 
 export function activityColor(idx) { return ACTIVITY_COLORS[idx % ACTIVITY_COLORS.length] }
 
-export const cellTd = { padding: '3px 4px', verticalAlign: 'top', cursor: 'pointer' }
-export const emptyTd = { padding: '3px 4px', verticalAlign: 'top' }
+export const cellTd = { padding: '5px 4px', verticalAlign: 'top', cursor: 'pointer' }
+export const emptyTd = { padding: '5px 4px', verticalAlign: 'top' }
 
 export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherMode, onEdit, onLock, onRelease, isLocked, isDndEnabled }) {
   const id = slot ? `${slot.groupId}|${slot.dayId}|${slot.blockId}` : 'empty'
@@ -45,9 +45,9 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
         <div style={{
           background: '#F3E8FA',
           border: '1.5px solid #A6359566',
-          borderRadius: 6,
-          padding: '5px 8px',
-          minHeight: 36,
+          borderRadius: 8,
+          padding: '10px 12px',
+          minHeight: 56,
           display: 'flex',
           alignItems: 'center',
         }}>
@@ -62,7 +62,7 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
   if (slot.type === 'unavailable') {
     return (
       <td ref={setRef} style={emptyTd}>
-        <div style={{ background: 'var(--bg)', border: '1.5px dashed #D8C8B8', borderRadius: 6, minHeight: 36, opacity: 0.5 }} />
+        <div style={{ background: 'var(--bg)', border: '1.5px dashed #D8C8B8', borderRadius: 8, minHeight: 56, opacity: 0.5 }} />
       </td>
     )
   }
@@ -99,9 +99,9 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
   const lockedInnerStyle = {
     background: '#FFFBF0',
     border: '2px solid #E8A020',
-    borderRadius: 6,
-    padding: '5px 8px',
-    minHeight: 36,
+    borderRadius: 8,
+    padding: '10px 12px',
+    minHeight: 56,
     position: 'relative',
     overflow: 'hidden',
   }
@@ -110,9 +110,9 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
     ? {
         background: `${color}1E`,
         border: isWeatherHighlight ? `2px solid #2F7DE1` : `1.5px solid ${color}55`,
-        borderRadius: 6,
-        padding: '5px 8px',
-        minHeight: 36,
+        borderRadius: 8,
+        padding: '10px 12px',
+        minHeight: 56,
         opacity: isDragging ? 0.4 : 1,
         outline: isOver && isDndEnabled ? '2px solid var(--primary)' : 'none',
         outlineOffset: -2,
@@ -121,9 +121,9 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
     : {
         background: 'var(--bg)',
         border: '1.5px dashed #D8C8B8',
-        borderRadius: 6,
-        padding: '5px 8px',
-        minHeight: 36,
+        borderRadius: 8,
+        padding: '10px 12px',
+        minHeight: 56,
         position: 'relative',
       }
 
@@ -157,21 +157,21 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
           }} />
         )}
         <div style={{
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: activity ? 700 : 500,
           color: isLocked ? '#7A5100' : (activity ? color : '#B0A090'),
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}>
-          {activity?.name || <span style={{ fontSize: 10 }}>Unassigned</span>}
+          {activity?.name || <span style={{ fontSize: 11 }}>Unassigned</span>}
         </div>
         {hasFlags && !isLocked && (
-          <div style={{ display: 'flex', gap: 2, marginTop: 3, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 3, marginTop: 5, flexWrap: 'wrap' }}>
             {activeFlags.map(f => (
               <span
                 key={f}
-                style={{ width: 5, height: 5, borderRadius: '50%', background: FLAG_COLORS[f], display: 'inline-block' }}
+                style={{ width: 6, height: 6, borderRadius: '50%', background: FLAG_COLORS[f], display: 'inline-block' }}
                 title={flags[`${f}_reason`] || f}
               />
             ))}
