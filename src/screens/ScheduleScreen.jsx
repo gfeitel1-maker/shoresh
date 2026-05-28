@@ -36,7 +36,7 @@ export default function ScheduleScreen({ campId, onNavigate }) {
   const [templateError, setTemplateError] = useState(null)
   const [snapshots, setSnapshots] = useState([])
   const [showVersions, setShowVersions] = useState(false)
-  const [zoom, setZoom] = useState(100)
+  const [zoom, setZoom] = useState(75)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
@@ -364,9 +364,9 @@ export default function ScheduleScreen({ campId, onNavigate }) {
 
   const zoomBar = (
     <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 4, padding: '5px 10px', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
-      <button onClick={() => setZoom(z => Math.max(50, z - 10))} style={{ width: 20, height: 20, border: '1px solid var(--border)', borderRadius: 3, background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: 13, fontWeight: 700, padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-      <input type="range" min={50} max={120} step={10} value={zoom} onChange={e => setZoom(Number(e.target.value))} style={{ width: 60, accentColor: 'var(--primary)', cursor: 'pointer' }} />
-      <button onClick={() => setZoom(z => Math.min(120, z + 10))} style={{ width: 20, height: 20, border: '1px solid var(--border)', borderRadius: 3, background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: 13, fontWeight: 700, padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+      <button onClick={() => setZoom(z => Math.max(50, z - 5))} style={{ width: 20, height: 20, border: '1px solid var(--border)', borderRadius: 3, background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: 13, fontWeight: 700, padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+      <input type="range" min={50} max={150} step={5} value={zoom} onChange={e => setZoom(Number(e.target.value))} style={{ width: 60, accentColor: 'var(--primary)', cursor: 'pointer' }} />
+      <button onClick={() => setZoom(z => Math.min(150, z + 5))} style={{ width: 20, height: 20, border: '1px solid var(--border)', borderRadius: 3, background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: 13, fontWeight: 700, padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', minWidth: 32, textAlign: 'right' }}>{zoom}%</span>
     </div>
   )

@@ -46,8 +46,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
           background: '#F3E8FA',
           border: '1.5px solid #A6359566',
           borderRadius: 8,
-          padding: '10px 12px',
-          minHeight: 56,
+          padding: '7px 10px',
+          minHeight: 44,
           display: 'flex',
           alignItems: 'center',
         }}>
@@ -62,7 +62,7 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
   if (slot.type === 'unavailable') {
     return (
       <td ref={setRef} style={emptyTd}>
-        <div style={{ background: 'var(--bg)', border: '1.5px dashed #D8C8B8', borderRadius: 8, minHeight: 56, opacity: 0.5 }} />
+        <div style={{ background: 'var(--bg)', border: '1.5px dashed #D8C8B8', borderRadius: 8, minHeight: 44, opacity: 0.5 }} />
       </td>
     )
   }
@@ -100,8 +100,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
     background: '#FFFBF0',
     border: '2px solid #E8A020',
     borderRadius: 8,
-    padding: '10px 12px',
-    minHeight: 56,
+    padding: '7px 10px',
+    minHeight: 44,
     position: 'relative',
     overflow: 'hidden',
   }
@@ -111,8 +111,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
         background: `${color}1E`,
         border: isWeatherHighlight ? `2px solid #2F7DE1` : `1.5px solid ${color}55`,
         borderRadius: 8,
-        padding: '10px 12px',
-        minHeight: 56,
+        padding: '7px 10px',
+        minHeight: 44,
         opacity: isDragging ? 0.4 : 1,
         outline: isOver && isDndEnabled ? '2px solid var(--primary)' : 'none',
         outlineOffset: -2,
@@ -122,8 +122,8 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
         background: 'var(--bg)',
         border: '1.5px dashed #D8C8B8',
         borderRadius: 8,
-        padding: '10px 12px',
-        minHeight: 56,
+        padding: '7px 10px',
+        minHeight: 44,
         position: 'relative',
       }
 
