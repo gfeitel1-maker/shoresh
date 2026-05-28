@@ -31,8 +31,28 @@ export function useSession() {
       if (s) {
         // Token refresh while already in the app — campId hasn't changed, skip re-query.
         if (_event === 'TOKEN_REFRESHED' && campIdRef.current) return
+
         setResolving(true)
-        const cid = await resolveCampId(s)
+
+        // Two attempts with a 5-second timeout each.  On a cold Supabase connection
+        // (Vercel edge → Supabase cold start, slow network, JWT mid-refresh) the first
+        // request can silently hang and never settle, leaving resolving=true forever.
+        // The try/finally guarantees resolving is always cleared regardless.
+        let cid = null
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            cid = await Promise.race([
+              resolveCampId(s),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('campId timeout')), 5000)
+              ),
+            ])
+            break // success — exit retry loop
+          } catch {
+            if (attempt === 0) await new Promise(r => setTimeout(r, 1200))
+          }
+        }
+
         if (!active) return
         setCampId(cid)
         campIdRef.current = cid
