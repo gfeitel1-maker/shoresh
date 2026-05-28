@@ -420,7 +420,7 @@ export default function ScheduleScreen({ campId, onNavigate }) {
 
       {/* Stats bar */}
       {hasSchedule && stats && (
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
           <StatBadge label="Filled" value={`${stats.filled}/${stats.open}`} color="var(--success)" />
           <StatBadge label="Unfillable" value={visibleSlots.filter(s => s.flags?.UNFILLABLE && !s.flags?.UNFILLABLE_dismissed).length} color={visibleSlots.some(s => s.flags?.UNFILLABLE && !s.flags?.UNFILLABLE_dismissed) ? '#F0585D' : 'var(--text-secondary)'} onClick={() => setActiveFlag('UNFILLABLE')} />
           <StatBadge label="Underserved" value={visibleSlots.filter(s => s.flags?.UNDERSERVED && !s.flags?.UNDERSERVED_dismissed).length} color={visibleSlots.some(s => s.flags?.UNDERSERVED && !s.flags?.UNDERSERVED_dismissed) ? '#F5A623' : 'var(--text-secondary)'} onClick={() => setActiveFlag('UNDERSERVED')} />
@@ -440,10 +440,10 @@ export default function ScheduleScreen({ campId, onNavigate }) {
       {/* Group view */}
       {hasSchedule && view === 'group' && (
         <div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'nowrap', overflowX: 'auto', marginBottom: 12, paddingBottom: 2 }}>
             {groups.map(g => (
               <button key={g.id} onClick={() => setSelectedGroup(g.id)} style={{
-                padding: '5px 12px', borderRadius: 20,
+                padding: '4px 12px', borderRadius: 20, flexShrink: 0,
                 border: `1.5px solid ${selectedGroup === g.id ? 'var(--primary)' : 'var(--border)'}`,
                 background: selectedGroup === g.id ? 'var(--primary)' : 'var(--surface)',
                 color: selectedGroup === g.id ? '#fff' : 'var(--text)',
@@ -463,11 +463,11 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {timeBlocks.map(block => (
-                      <tr key={block.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
+                    {timeBlocks.map((block, idx) => (
+                      <tr key={block.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 1 ? 'rgba(0,0,0,0.018)' : 'var(--surface)' }}>
+                        <td style={{ padding: '8px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
                           <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{block.name}</div>
-                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                         </td>
                         {days.map(day => {
                           const slot = getSlot(selectedGroup, day.id, block.id)
@@ -503,10 +503,10 @@ export default function ScheduleScreen({ campId, onNavigate }) {
       {/* Daily view */}
       {hasSchedule && view === 'day' && (
         <div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 2 }}>
             {days.map(d => (
               <button key={d.id} onClick={() => setSelectedDay(d.id)} style={{
-                padding: '5px 16px', borderRadius: 20,
+                padding: '4px 14px', borderRadius: 20, flexShrink: 0,
                 border: `1.5px solid ${selectedDay === d.id ? 'var(--primary)' : 'var(--border)'}`,
                 background: selectedDay === d.id ? 'var(--primary)' : 'var(--surface)',
                 color: selectedDay === d.id ? '#fff' : 'var(--text)',
@@ -541,11 +541,11 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {timeBlocks.map(block => (
-                        <tr key={block.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
+                      {timeBlocks.map((block, idx) => (
+                        <tr key={block.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 1 ? 'rgba(0,0,0,0.018)' : 'var(--surface)' }}>
+                          <td style={{ padding: '8px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
                             <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{block.name}</div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
+                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 1 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                           </td>
                           {groups.map(group => {
                             const slot = getSlot(group.id, selectedDay, block.id)
@@ -649,11 +649,11 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                           </tr>
                         </thead>
                         <tbody>
-                          {timeBlocks.map(block => (
-                            <tr key={block.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                              <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
+                          {timeBlocks.map((block, idx) => (
+                            <tr key={block.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 1 ? 'rgba(0,0,0,0.018)' : 'var(--surface)' }}>
+                              <td style={{ padding: '8px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
                                 <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{block.name}</div>
-                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
+                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 1 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                               </td>
                               {days.map(day => {
                                 const assigned = slots.filter(s => s.activity_id === selectedActivity && s.day_id === day.id && s.time_block_id === block.id)

@@ -16,7 +16,7 @@ export async function resolveCampId(session) {
 export function useSession() {
   const [session, setSession] = useState(null)
   const [campId, setCampId] = useState(null)
-  const [resolving, setResolving] = useState(false)
+  const [resolving, setResolving] = useState(true)   // true until first auth event settles
   // Mirrors campId so the onAuthStateChange closure can read the current value.
   // Prevents TOKEN_REFRESHED (tab focus, hourly JWT rotation) from re-querying
   // the DB and potentially clearing campId while the user is mid-session.

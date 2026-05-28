@@ -57,8 +57,10 @@ export default function App() {
     }
   }, [session, campId, resolving])
 
-  // Show a bounded spinner only while actively resolving campId for a known session.
-  if (session && !campId && resolving) {
+  // Show spinner while resolving (covers initial page-load/refresh before the first
+  // INITIAL_SESSION event fires — prevents a false flash of AuthScreen that could
+  // race with the sign-out effect).
+  if (resolving) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg)', color: 'var(--text-secondary)', fontSize: 13 }}>
         Loading…
