@@ -448,7 +448,7 @@ export default function ScheduleScreen({ campId, onNavigate }) {
           </div>
 
           {selectedGroup && (
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 280px)' }}>
               <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 600, width: '100%', background: 'var(--surface)' }}>
                   <thead>
                     <tr>
@@ -525,7 +525,7 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                 )
               }}
             >
-              <div style={{ overflowX: 'auto' }}>
+              <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 280px)' }}>
                   <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 140 + groups.length * 120, background: 'var(--surface)' }}>
                     <thead>
                       <tr>
@@ -632,7 +632,7 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                     {act?.is_outdoor && <span style={{ fontSize: 11, color: '#2F7DE1', fontWeight: 600 }}>OUTDOOR</span>}
                   </div>
 
-                  <div style={{ overflowX: 'auto' }}>
+                  <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 280px)' }}>
                       <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 600, background: 'var(--surface)' }}>
                         <thead>
                           <tr>
