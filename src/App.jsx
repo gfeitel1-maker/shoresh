@@ -42,26 +42,49 @@ async function seedDays(campId) {
 }
 
 export default function App() {
-  const { session, campId, resolving } = useSession()
+  const { session, campId, resolving, campIdError } = useSession()
   const [screen, setScreen] = useState('setup')
 
   useEffect(() => {
     if (campId) seedDays(campId)
   }, [campId])
 
-  // If we have a session but no camp (lookup returned null), sign out silently.
-  // Guard on !resolving so we don't sign out while the DB call is still in-flight.
+  // Sign out only when the DB lookup SUCCEEDED but found no camp row.
+  // If campIdError is true the lookup failed with a network/timeout error —
+  // in that case we keep the session alive and show a retry screen instead of
+  // kicking the user back to the login form.
   useEffect(() => {
-    if (session && !campId && !resolving) {
+    if (session && !campId && !resolving && !campIdError) {
       supabase.auth.signOut()
     }
-  }, [session, campId, resolving])
+  }, [session, campId, resolving, campIdError])
 
-  // Show a bounded spinner only while actively resolving campId for a known session.
-  if (session && !campId && resolving) {
+  // Actively resolving campId for a known session — show a bounded spinner.
+  if (resolving) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg)', color: 'var(--text-secondary)', fontSize: 13 }}>
         Loading…
+      </div>
+    )
+  }
+
+  // DB lookup failed (network / timeout) — offer a reload instead of signing out.
+  if (session && campIdError) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg)', gap: 14 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center', maxWidth: 320 }}>
+          Couldn't reach the database. Check your connection and try again.
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: '8px 22px', borderRadius: 8, border: '1px solid var(--border)',
+            background: 'var(--surface)', cursor: 'pointer', fontSize: 13,
+            fontFamily: 'inherit', color: 'var(--text)',
+          }}
+        >
+          Reload
+        </button>
       </div>
     )
   }

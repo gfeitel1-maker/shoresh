@@ -48,13 +48,18 @@ export default function ScheduleScreen({ campId, onNavigate }) {
     setTemplateError(null)
     let loadedActivities = []
     try {
-      const [{ data: gd }, { data: td }, { data: bd }, { data: ad }, { data: ancd }, { data: tierd }] = await Promise.all([
-        supabase.from('groups').select('*').eq('camp_id', campId).order('name'),
-        supabase.from('days_of_operation').select('*').eq('camp_id', campId).order('sort_order'),
-        supabase.from('time_blocks').select('*').eq('camp_id', campId).order('sort_order'),
-        supabase.from('activities').select('*').eq('camp_id', campId),
-        supabase.from('anchor_activities').select('*').eq('camp_id', campId),
-        supabase.from('tiers').select('*').eq('camp_id', campId).order('sort_order'),
+      // 15-second hard timeout — prevents a silently-hung Supabase call from
+      // leaving loading=true indefinitely (cold connection, stale JWT, etc.)
+      const [{ data: gd }, { data: td }, { data: bd }, { data: ad }, { data: ancd }, { data: tierd }] = await Promise.race([
+        Promise.all([
+          supabase.from('groups').select('*').eq('camp_id', campId).order('name'),
+          supabase.from('days_of_operation').select('*').eq('camp_id', campId).order('sort_order'),
+          supabase.from('time_blocks').select('*').eq('camp_id', campId).order('sort_order'),
+          supabase.from('activities').select('*').eq('camp_id', campId),
+          supabase.from('anchor_activities').select('*').eq('camp_id', campId),
+          supabase.from('tiers').select('*').eq('camp_id', campId).order('sort_order'),
+        ]),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('load timeout')), 15000)),
       ])
       const g = gd || []; const b = bd || []; const a = ad || []; const anc = ancd || []; const t = tierd || []
       const d = (td || []).filter((x, i, arr) => arr.findIndex(y => y.day_of_week === x.day_of_week) === i)
