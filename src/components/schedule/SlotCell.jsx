@@ -15,8 +15,8 @@ const REAL_FLAG_NAMES = new Set(Object.keys(FLAG_COLORS))
 
 export function activityColor(idx) { return ACTIVITY_COLORS[idx % ACTIVITY_COLORS.length] }
 
-export const cellTd = { padding: '5px 4px', verticalAlign: 'top', cursor: 'pointer' }
-export const emptyTd = { padding: '5px 4px', verticalAlign: 'top' }
+export const cellTd = { padding: '4px', verticalAlign: 'middle', cursor: 'pointer' }
+export const emptyTd = { padding: '4px', verticalAlign: 'middle' }
 
 export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherMode, onEdit, onLock, onRelease, isLocked, isDndEnabled }) {
   const id = slot ? `${slot.groupId}|${slot.dayId}|${slot.blockId}` : 'empty'
@@ -49,9 +49,11 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
           padding: '10px 10px',
           minHeight: 80,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
+          justifyContent: 'center',
         }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: ANCHOR_COLOR, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: ANCHOR_COLOR, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center', width: '100%' }}>
             {anchor?.name || 'Anchor'}
           </div>
         </div>
@@ -100,10 +102,14 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
     background: '#FFFBF0',
     border: '2px solid #E8A020',
     borderRadius: 10,
-    padding: '10px 10px',
+    padding: '10px 8px',
     minHeight: 80,
     position: 'relative',
     overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 
   const normalInnerStyle = activity
@@ -111,20 +117,28 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
         background: `${color}1E`,
         border: isWeatherHighlight ? `2px solid #2F7DE1` : `1.5px solid ${color}55`,
         borderRadius: 10,
-        padding: '10px 10px',
+        padding: '10px 8px',
         minHeight: 80,
         opacity: isDragging ? 0.4 : 1,
         outline: isOver && isDndEnabled ? '2px solid var(--primary)' : 'none',
         outlineOffset: -2,
         position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
       }
     : {
         background: 'var(--bg)',
         border: '1.5px dashed #D8C8B8',
         borderRadius: 10,
-        padding: '10px 10px',
+        padding: '10px 8px',
         minHeight: 80,
         position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
       }
 
   const innerStyle = isLocked ? lockedInnerStyle : normalInnerStyle
@@ -163,11 +177,13 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
+          textAlign: 'center',
+          width: '100%',
         }}>
           {activity?.name || <span style={{ fontSize: 11 }}>Unassigned</span>}
         </div>
         {hasFlags && !isLocked && (
-          <div style={{ display: 'flex', gap: 3, marginTop: 5, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 3, marginTop: 5, flexWrap: 'wrap', justifyContent: 'center' }}>
             {activeFlags.map(f => (
               <span
                 key={f}

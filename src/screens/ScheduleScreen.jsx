@@ -36,7 +36,6 @@ export default function ScheduleScreen({ campId, onNavigate }) {
   const [templateError, setTemplateError] = useState(null)
   const [snapshots, setSnapshots] = useState([])
   const [showVersions, setShowVersions] = useState(false)
-  const [zoom, setZoom] = useState(75)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
@@ -367,15 +366,6 @@ export default function ScheduleScreen({ campId, onNavigate }) {
 
   const hasSchedule = slots.length > 0
 
-  const zoomBar = (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 4, padding: '5px 10px', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
-      <button onClick={() => setZoom(z => Math.max(50, z - 5))} style={{ width: 20, height: 20, border: '1px solid var(--border)', borderRadius: 3, background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: 13, fontWeight: 700, padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-      <input type="range" min={50} max={150} step={5} value={zoom} onChange={e => setZoom(Number(e.target.value))} style={{ width: 60, accentColor: 'var(--primary)', cursor: 'pointer' }} />
-      <button onClick={() => setZoom(z => Math.min(150, z + 5))} style={{ width: 20, height: 20, border: '1px solid var(--border)', borderRadius: 3, background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: 13, fontWeight: 700, padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', minWidth: 32, textAlign: 'right' }}>{zoom}%</span>
-    </div>
-  )
-
   return (
     <div style={{ maxWidth: '100%' }}>
       {loadError && <div style={S.errorBanner}>{loadError}</div>}
@@ -458,19 +448,20 @@ export default function ScheduleScreen({ campId, onNavigate }) {
           </div>
 
           {selectedGroup && (
-            <div style={{ borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden' }}>
-              <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 310px)' }}>
-                <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 500, width: '100%', background: 'var(--surface)', zoom: zoom / 100 }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 600, width: '100%', background: 'var(--surface)' }}>
                   <thead>
-                    <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
-                      <th style={{ ...S.th, padding: '8px 12px', whiteSpace: 'nowrap', width: 150 }}>Block</th>
-                      {days.map(d => <th key={d.id} style={{ ...S.th, padding: '8px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</th>)}
+                    <tr>
+                      <th style={{ ...S.th, position: 'sticky', top: 0, left: 0, zIndex: 3, background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)', borderRight: '2px solid var(--border)', padding: '10px 14px', whiteSpace: 'nowrap', width: 140 }}>Block</th>
+                      {days.map(d => <th key={d.id} style={{ ...S.th, position: 'sticky', top: 0, zIndex: 2, background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)', padding: '10px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</th>)}
                     </tr>
                   </thead>
                   <tbody>
-                    {timeBlocks.map((block, idx) => (
-                      <tr key={block.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 1 ? 'rgba(0,0,0,0.018)' : 'var(--surface)' }}>
-                        <td style={{ padding: '8px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
+                    {timeBlocks.map((block, idx) => {
+                      const rowBg = idx % 2 === 1 ? '#FAFAF9' : 'var(--surface)'
+                      return (
+                      <tr key={block.id} style={{ borderBottom: '1px solid var(--border)', background: rowBg }}>
+                        <td style={{ position: 'sticky', left: 0, zIndex: 1, background: rowBg, boxShadow: '2px 0 4px -2px rgba(0,0,0,0.07)', borderRight: '2px solid var(--border)', padding: '8px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                           <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{block.name}</div>
                           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                         </td>
@@ -495,11 +486,9 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                           )
                         })}
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
-              </div>
-              {zoomBar}
             </div>
           )}
         </div>
@@ -536,19 +525,20 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                 )
               }}
             >
-              <div style={{ borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden' }}>
-                <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 310px)' }}>
-                  <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 140 + groups.length * 130, background: 'var(--surface)', zoom: zoom / 100 }}>
+              <div style={{ overflowX: 'auto' }}>
+                  <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 140 + groups.length * 120, background: 'var(--surface)' }}>
                     <thead>
-                      <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
-                        <th style={{ ...S.th, padding: '8px 12px', whiteSpace: 'nowrap', width: 150 }}>Block</th>
-                        {groups.map(g => <th key={g.id} style={{ ...S.th, padding: '8px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.name}</th>)}
+                      <tr>
+                        <th style={{ ...S.th, position: 'sticky', top: 0, left: 0, zIndex: 3, background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)', borderRight: '2px solid var(--border)', padding: '10px 14px', whiteSpace: 'nowrap', width: 140 }}>Block</th>
+                        {groups.map(g => <th key={g.id} style={{ ...S.th, position: 'sticky', top: 0, zIndex: 2, background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)', padding: '10px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.name}</th>)}
                       </tr>
                     </thead>
                     <tbody>
-                      {timeBlocks.map((block, idx) => (
-                        <tr key={block.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 1 ? 'rgba(0,0,0,0.018)' : 'var(--surface)' }}>
-                          <td style={{ padding: '8px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
+                      {timeBlocks.map((block, idx) => {
+                        const rowBg = idx % 2 === 1 ? '#FAFAF9' : 'var(--surface)'
+                        return (
+                        <tr key={block.id} style={{ borderBottom: '1px solid var(--border)', background: rowBg }}>
+                          <td style={{ position: 'sticky', left: 0, zIndex: 1, background: rowBg, boxShadow: '2px 0 4px -2px rgba(0,0,0,0.07)', borderRight: '2px solid var(--border)', padding: '8px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                             <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{block.name}</div>
                             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 1 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                           </td>
@@ -578,11 +568,9 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                             )
                           })}
                         </tr>
-                      ))}
+                      )})}
                     </tbody>
                   </table>
-                </div>
-                {zoomBar}
               </div>
             </DndContext>
           )}
@@ -644,32 +632,33 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                     {act?.is_outdoor && <span style={{ fontSize: 11, color: '#2F7DE1', fontWeight: 600 }}>OUTDOOR</span>}
                   </div>
 
-                  <div style={{ borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden' }}>
-                    <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 310px)' }}>
-                      <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', background: 'var(--surface)', zoom: zoom / 100 }}>
+                  <div style={{ overflowX: 'auto' }}>
+                      <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', minWidth: 600, background: 'var(--surface)' }}>
                         <thead>
-                          <tr style={{ background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)' }}>
-                            <th style={{ ...S.th, padding: '8px 12px', whiteSpace: 'nowrap', width: 150 }}>Block</th>
-                            {days.map(d => <th key={d.id} style={{ ...S.th, padding: '8px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</th>)}
+                          <tr>
+                            <th style={{ ...S.th, position: 'sticky', top: 0, left: 0, zIndex: 3, background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)', borderRight: '2px solid var(--border)', padding: '10px 14px', whiteSpace: 'nowrap', width: 140 }}>Block</th>
+                            {days.map(d => <th key={d.id} style={{ ...S.th, position: 'sticky', top: 0, zIndex: 2, background: 'var(--surface-elevated)', borderBottom: '1.5px solid var(--border)', padding: '10px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</th>)}
                           </tr>
                         </thead>
                         <tbody>
-                          {timeBlocks.map((block, idx) => (
-                            <tr key={block.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 1 ? 'rgba(0,0,0,0.018)' : 'var(--surface)' }}>
-                              <td style={{ padding: '8px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', borderRight: '1px solid var(--border)' }}>
+                          {timeBlocks.map((block, idx) => {
+                            const rowBg = idx % 2 === 1 ? '#FAFAF9' : 'var(--surface)'
+                            return (
+                            <tr key={block.id} style={{ borderBottom: '1px solid var(--border)', background: rowBg }}>
+                              <td style={{ position: 'sticky', left: 0, zIndex: 1, background: rowBg, boxShadow: '2px 0 4px -2px rgba(0,0,0,0.07)', borderRight: '2px solid var(--border)', padding: '8px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                                 <div style={{ fontFamily: 'var(--font-condensed)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{block.name}</div>
                                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 1 }}>{block.start_time?.slice(0,5)}–{block.end_time?.slice(0,5)}</div>
                               </td>
                               {days.map(day => {
                                 const assigned = slots.filter(s => s.activity_id === selectedActivity && s.day_id === day.id && s.time_block_id === block.id)
                                 return (
-                                  <td key={day.id} style={{ ...cellTd, background: assigned.length ? `${color}12` : '', borderLeft: assigned.length ? `3px solid ${color}` : '3px solid transparent', verticalAlign: 'top' }}>
+                                  <td key={day.id} style={{ ...cellTd, background: assigned.length ? `${color}12` : '', borderLeft: assigned.length ? `3px solid ${color}` : '3px solid transparent', verticalAlign: 'middle' }}>
                                     {assigned.length === 0 ? null : (
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
                                         {assigned.map(s => {
                                           const g = groups.find(g => g.id === s.group_id)
                                           return (
-                                            <span key={s.id} style={{ fontSize: 11, fontWeight: 600, color, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            <span key={s.id} style={{ fontSize: 11, fontWeight: 600, color, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center' }}>
                                               {g?.name || '?'}
                                             </span>
                                           )
@@ -680,11 +669,9 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                                 )
                               })}
                             </tr>
-                          ))}
+                          )})}
                         </tbody>
                       </table>
-                    </div>
-                    {zoomBar}
                   </div>
                 </div>
               )
