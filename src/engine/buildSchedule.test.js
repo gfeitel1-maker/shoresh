@@ -64,6 +64,138 @@ describe('DISTRIBUTION flag', () => {
   })
 })
 
+describe('anchor blocked_activity_ids constraint', () => {
+  it('prevents a blocked activity from being placed on the same day as its anchor', () => {
+    const block2 = { id: 'b2', name: 'Afternoon', start_time: '14:00', end_time: '15:30', sort_order: 1, part_of_day: 'afternoon' }
+    const swimAnchor = { id: 'anc1', day_id: 'd1', time_block_id: 'b1', is_all_groups: true, group_ids: [], blocked_activity_ids: ['a1'] }
+    const waterplay = {
+      id: 'a1', name: 'Water Play', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+      exclusive_with_ids: [],
+    }
+    const arts = {
+      id: 'a2', name: 'Arts', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+      exclusive_with_ids: [],
+    }
+    const { slots } = buildSchedule(minimal({
+      timeBlocks: [baseBlock, block2],
+      activities: [waterplay, arts],
+      anchors: [swimAnchor],
+    }))
+    // Swim anchor is on d1/b1 and blocks Water Play — Water Play must not appear on d1 at all
+    const waterOnD1 = slots.find(s => s.activityId === 'a1' && s.dayId === 'd1')
+    expect(waterOnD1).toBeFalsy()
+  })
+
+  it('does not block the activity on other days', () => {
+    const day2 = { id: 'd2', label: 'Tuesday', day_of_week: 2, sort_order: 1 }
+    const swimAnchor = { id: 'anc1', day_id: 'd1', time_block_id: 'b1', is_all_groups: true, group_ids: [], blocked_activity_ids: ['a1'] }
+    const waterplay = {
+      id: 'a1', name: 'Water Play', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+      exclusive_with_ids: [],
+    }
+    const { slots } = buildSchedule(minimal({
+      days: [baseDay, day2],
+      activities: [waterplay],
+      anchors: [swimAnchor],
+    }))
+    // Water Play is blocked on d1 (has swim anchor) but should be placed on d2
+    const waterOnD2 = slots.find(s => s.activityId === 'a1' && s.dayId === 'd2')
+    expect(waterOnD2).toBeTruthy()
+  })
+})
+
+describe('exclusive_with_ids constraint', () => {
+  it('never places two mutually exclusive activities on the same day for the same group', () => {
+    const day2 = { id: 'd2', label: 'Tuesday', day_of_week: 2, sort_order: 1 }
+    const block2 = { id: 'b2', name: 'Afternoon', start_time: '14:00', end_time: '15:30', sort_order: 1, part_of_day: 'afternoon' }
+    const swim = {
+      id: 'a1', name: 'Swim', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+      exclusive_with_ids: ['a2'],
+    }
+    const waterplay = {
+      id: 'a2', name: 'Waterplay', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+      exclusive_with_ids: ['a1'],
+    }
+    const { slots } = buildSchedule(minimal({
+      days: [baseDay, day2],
+      timeBlocks: [baseBlock, block2],
+      activities: [swim, waterplay],
+    }))
+    const actSlots = slots.filter(s => s.type === 'activity' && s.activityId)
+    const swimDays = actSlots.filter(s => s.activityId === 'a1').map(s => s.dayId)
+    const waterDays = actSlots.filter(s => s.activityId === 'a2').map(s => s.dayId)
+    const conflict = swimDays.some(d => waterDays.includes(d))
+    expect(conflict).toBe(false)
+  })
+
+  it('respects exclusive_with_ids for preplaced slots too', () => {
+    const block2 = { id: 'b2', name: 'Afternoon', start_time: '14:00', end_time: '15:30', sort_order: 1, part_of_day: 'afternoon' }
+    const swim = {
+      id: 'a1', name: 'Swim', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+      exclusive_with_ids: ['a2'],
+    }
+    const waterplay = {
+      id: 'a2', name: 'Waterplay', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+      exclusive_with_ids: ['a1'],
+    }
+    // Preplaced swim on d1/b1 → waterplay must NOT appear anywhere on d1
+    const preplaced = [{ groupId: 'g1', dayId: 'd1', blockId: 'b1', activityId: 'a1' }]
+    const { slots } = buildSchedule(minimal({
+      timeBlocks: [baseBlock, block2],
+      activities: [swim, waterplay],
+      preplacedSlots: preplaced,
+    }))
+    const waterOnD1 = slots.find(s => s.activityId === 'a2' && s.dayId === 'd1')
+    expect(waterOnD1).toBeFalsy()
+  })
+})
+
+describe('co-occupancy preference', () => {
+  it('places a second same-tier group into an already-occupied multi-group slot', () => {
+    const g2 = { id: 'g2', name: 'Bet', tier_id: 't1', availability: 'all' }
+    const block2 = { id: 'b2', name: 'Afternoon', start_time: '14:00', end_time: '15:30', sort_order: 1, part_of_day: 'afternoon' }
+    const pool = {
+      id: 'a1', name: 'Pool', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: 'pool', max_groups_per_slot: 2, same_tier_only: true,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+    }
+    const arts = {
+      id: 'a2', name: 'Arts', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+    }
+    // Lock g1 at pool/d1/b1 — seeds locationUsage with 1 occupant before pass 2
+    const preplaced = [{ groupId: 'g1', dayId: 'd1', blockId: 'b1', activityId: 'a1' }]
+    const { slots } = buildSchedule({
+      groups: [baseGroup, g2],
+      tiers: [{ id: 't1', name: 'Junior' }],
+      days: [baseDay],
+      timeBlocks: [baseBlock, block2],
+      activities: [pool, arts],
+      anchors: [],
+      campId: 'test',
+      preplacedSlots: preplaced,
+    })
+    // g2 should co-locate with g1 at pool/d1/b1, not scatter to b2
+    const g2PoolAtB1 = slots.find(s => s.groupId === 'g2' && s.activityId === 'a1' && s.blockId === 'b1')
+    expect(g2PoolAtB1).toBeTruthy()
+  })
+})
+
 describe('preplacedSlots (locking)', () => {
   it('keeps a preplaced slot even when another activity would be preferred', () => {
     const swim = { id: 'a1', name: 'Swimming', priority: 'high', max_per_week: 5, min_per_week: 0, is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false, eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null }

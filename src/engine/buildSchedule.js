@@ -47,6 +47,7 @@ function buildSchedule({ groups, tiers, days, timeBlocks, activities, anchors, c
   }
 
   // ── Pass 1: map the grid ──────────────────────────────────────────────────
+  const blockedActivities = new Map() // "groupId|dayId" → Set<activityId> — blocked by anchor rules
   const anchorLookup = new Map() // "groupId|dayId|blockId" → anchor
   for (const anchor of anchors) {
     const groupList = anchor.is_all_groups ? groups.map(g => g.id) : (anchor.group_ids || [])
@@ -69,6 +70,12 @@ function buildSchedule({ groups, tiers, days, timeBlocks, activities, anchors, c
 
         if (anchor) {
           slots.push({ groupId: group.id, dayId: day.id, blockId: block.id, type: 'anchor', activityId: null, anchorId: anchor.id, flags: {} })
+          if (anchor.blocked_activity_ids?.length) {
+            const dk = `${group.id}|${day.id}`
+            const bs = blockedActivities.get(dk) || new Set()
+            anchor.blocked_activity_ids.forEach(id => bs.add(id))
+            blockedActivities.set(dk, bs)
+          }
           continue
         }
 
@@ -89,6 +96,7 @@ function buildSchedule({ groups, tiers, days, timeBlocks, activities, anchors, c
   const assigned = new Map() // "groupId|dayId|blockId" → activityId
   const usageCount = new Map() // "groupId|activityId" → count
   const locationUsage = new Map() // "location|dayId|blockId" → [{ groupId, tierId }]
+  const dayUsage = new Map() // "groupId|dayId" → Set<activityId>
 
   function getCount(groupId, actId) {
     return usageCount.get(`${groupId}|${actId}`) || 0
@@ -105,6 +113,15 @@ function buildSchedule({ groups, tiers, days, timeBlocks, activities, anchors, c
     const group = groupMap.get(groupId)
     // max_per_week
     if (getCount(groupId, act.id) >= act.max_per_week) return false
+
+    // blocked by anchor rule
+    if (blockedActivities.get(`${groupId}|${dayId}`)?.has(act.id)) return false
+
+    // exclusive_with_ids: activity cannot share a day with any listed activity
+    if (act.exclusive_with_ids?.length) {
+      const placed = dayUsage.get(`${groupId}|${dayId}`) || new Set()
+      if (act.exclusive_with_ids.some(id => placed.has(id))) return false
+    }
 
     // location capacity
     if (act.location && act.max_groups_per_slot > 1) {
@@ -135,6 +152,10 @@ function buildSchedule({ groups, tiers, days, timeBlocks, activities, anchors, c
       list.push({ groupId, tierId: group.tier_id })
       locationUsage.set(lk, list)
     }
+    const dk = `${groupId}|${dayId}`
+    const ds = dayUsage.get(dk) || new Set()
+    ds.add(act.id)
+    dayUsage.set(dk, ds)
   }
 
   // Pre-place locked slots before Pass 2 scoring
@@ -185,8 +206,11 @@ function buildSchedule({ groups, tiers, days, timeBlocks, activities, anchors, c
       const deferred = candidates.filter(a => scoreForPrefer(a, slot.groupId, slot.dayId) !== 0)
       const ordered = [...normal, ...deferred]
 
-      // pick lowest usage, break ties randomly
+      // pick lowest usage, break ties randomly; prefer activities already partially filling this slot
       ordered.sort((a, b) => {
+        const aOcc = a.location ? (locationUsage.get(locationKey(a.location, slot.dayId, slot.blockId)) || []).length : 0
+        const bOcc = b.location ? (locationUsage.get(locationKey(b.location, slot.dayId, slot.blockId)) || []).length : 0
+        if (bOcc !== aOcc) return bOcc - aOcc
         const diff = getCount(slot.groupId, a.id) - getCount(slot.groupId, b.id)
         return diff !== 0 ? diff : rand() - 0.5
       })
