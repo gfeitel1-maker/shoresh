@@ -212,9 +212,12 @@ export default function ScheduleScreen({ campId, onNavigate }) {
     })
   }
 
-  async function lockActivity(activityId) {
-    await supabase.from('activities').update({ is_locked: true }).eq('id', activityId)
-    setActivities(prev => prev.map(a => a.id === activityId ? { ...a, is_locked: true } : a))
+  async function toggleActivityLock(activityId) {
+    const act = activities.find(a => a.id === activityId)
+    if (!act) return
+    const newLocked = !act.is_locked
+    await supabase.from('activities').update({ is_locked: newLocked }).eq('id', activityId)
+    setActivities(prev => prev.map(a => a.id === activityId ? { ...a, is_locked: newLocked } : a))
   }
 
   async function releaseCell(slotId) {
@@ -560,7 +563,7 @@ export default function ScheduleScreen({ campId, onNavigate }) {
                                 actColorIdx={act?.colorIdx || 0}
                                 weatherMode={weatherMode}
                                 onEdit={s => setEditSlot(s)}
-                                onLock={s => lockActivity(s.activity_id)}
+                                onLock={s => toggleActivityLock(s.activity_id)}
                                 onRelease={s => releaseCell(s.id)}
                                 isLocked={isLocked}
                                 isDndEnabled={!isLocked}
