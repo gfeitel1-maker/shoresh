@@ -64,6 +64,22 @@ describe('DISTRIBUTION flag', () => {
   })
 })
 
+describe('max one activity per group per day', () => {
+  it('never places the same activity twice in one day for the same group', () => {
+    const block2 = { id: 'b2', name: 'Afternoon', start_time: '14:00', end_time: '15:30', sort_order: 1, part_of_day: 'afternoon' }
+    // Only one activity available — without the constraint it would fill both slots
+    const act = {
+      id: 'a1', name: 'Arts', priority: 'high', max_per_week: 5, min_per_week: 0,
+      is_outdoor: false, location: null, max_groups_per_slot: 1, same_tier_only: false,
+      eligible_tier_ids: [], eligible_group_ids: [], prefer_before_day: null, prefer_before_day_min: null,
+      exclusive_with_ids: [],
+    }
+    const { slots } = buildSchedule(minimal({ timeBlocks: [baseBlock, block2], activities: [act] }))
+    const actSlots = slots.filter(s => s.activityId === 'a1')
+    expect(actSlots.length).toBe(1) // placed once, second slot is UNFILLABLE
+  })
+})
+
 describe('anchor blocked_activity_ids constraint', () => {
   it('prevents a blocked activity from being placed on the same day as its anchor', () => {
     const block2 = { id: 'b2', name: 'Afternoon', start_time: '14:00', end_time: '15:30', sort_order: 1, part_of_day: 'afternoon' }

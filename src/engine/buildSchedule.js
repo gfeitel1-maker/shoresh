@@ -117,6 +117,9 @@ function buildSchedule({ groups, tiers, days, timeBlocks, activities, anchors, c
     // blocked by anchor rule
     if (blockedActivities.get(`${groupId}|${dayId}`)?.has(act.id)) return false
 
+    // never place the same activity twice in one day for the same group
+    if (dayUsage.get(`${groupId}|${dayId}`)?.has(act.id)) return false
+
     // exclusive_with_ids: activity cannot share a day with any listed activity
     if (act.exclusive_with_ids?.length) {
       const placed = dayUsage.get(`${groupId}|${dayId}`) || new Set()
