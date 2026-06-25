@@ -78,7 +78,6 @@ export default function SlotCell({ slot, activity, anchor, actColorIdx, weatherM
 
   function handleClick() {
     if (!activity) { onEdit(slot); return }
-    if (isLocked) { onRelease?.(slot); return }
     if (onLock && clickTimer.current) {
       clearTimeout(clickTimer.current)
       clickTimer.current = null
