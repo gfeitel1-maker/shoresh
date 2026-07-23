@@ -1,6 +1,11 @@
 .env
 .env.*
-.claude
+# .claude is ignored by default (local session/worktree/settings state),
+# but project subagent definitions must be tracked so they ship with the
+# repo -- see docs/workflow/WORKFLOW_AUDIT.md (Part 9 reconciliation).
+.claude/*
+!.claude/agents/
+!.claude/agents/**
 
 # Logs
 logs

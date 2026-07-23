@@ -38,3 +38,42 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 ## Database migrations
 
 Migrations are in `supabase/migrations/` and applied manually via the Supabase SQL editor. Run in filename order. The service role key is never used in the frontend.
+
+## Documentation precedence
+
+When canonical documents, agent files, or code appear to disagree, resolve
+in this order (highest first):
+
+1. **Live code and automated configuration** reveal what currently
+   executes (e.g. `package.json` dependencies, actual imports, actual
+   migrations applied).
+2. **`PLATFORM_STATE.md`** is the canonical written statement of active
+   platform state.
+3. **`docs/adr/`** explain approved architectural decisions.
+4. **`CONTEXT.md`** defines domain language.
+5. **This file (`CLAUDE.md`)** defines agent operating rules.
+6. **`README.md`** is public-facing and must be updated but is not an
+   implementation authority.
+7. Files or code labeled legacy are not to be extended without an
+   explicit migration decision recorded in `docs/adr/`.
+
+Do not silently preserve stale architecture: if you find README.md,
+CLAUDE.md, PLATFORM_STATE.md, `agents/*.md`, `.claude/agents/*.md`,
+`package.json`, `src/supabase.js`, `supabase/`, or `electron/` (if it
+exists) contradicting each other, reconcile using this precedence order
+and record the correction rather than picking silently. See
+`docs/workflow/WORKFLOW_AUDIT.md` for the most recent reconciliation pass
+and `PLATFORM_STATE.md` for the current resolved state (Supabase is the
+live persistence layer; no Electron/local-first layer exists in this
+repo as of 2026-07-23).
+
+## Engineering workflow
+
+This repository uses the Governor → Designer/Architect → Maker → Verifier
+→ selected reviewers → Grader-when-needed workflow described in
+`docs/workflow/WORKFLOW.md`, with agent profiles in `.claude/agents/` and
+the global rules in `~/.claude/WORKFLOW_CONSTITUTION.md`. Task state and
+handoffs use the templates in `docs/workflow/handoffs/TEMPLATE.md`.
+`docs/superpowers/` (existing plans/specs) is preserved as legacy/
+reference material and is not deleted or replaced by the new
+`docs/workflow/` structure.
